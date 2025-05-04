@@ -1,20 +1,21 @@
 const express = require('express');
 const orderRouter = express.Router();
+const ensureAuth = require('../middleware/authMiddleware');
 const roleCheck = require('../middleware/roleMiddleware');
 const {
     getAllOrders,
     getOrderById,
     getMyOrders,
     createOrder,
-    updateOrder,
+    updateOrderStatus, 
     deleteOrder
 } = require('../controllers/orderController');  
 
-orderRouter.get('/myorders', getMyOrders); 
-orderRouter.get('/', roleCheck('admin'), getAllOrders);
-orderRouter.get('/:id', roleCheck('admin'), getOrderById);
-orderRouter.post('/', createOrder);
-orderRouter.put('/:id', roleCheck('admin'), updateOrder);
-orderRouter.delete('/:id', roleCheck('admin'), deleteOrder); 
+orderRouter.get('/myorders', ensureAuth, getMyOrders); 
+orderRouter.get('/', ensureAuth, roleCheck('admin'), getAllOrders);
+orderRouter.get('/:id', ensureAuth, roleCheck('admin'), getOrderById);
+orderRouter.post('/', ensureAuth, createOrder);
+orderRouter.put('/:id', ensureAuth, roleCheck('admin'), updateOrderStatus); 
+orderRouter.delete('/:id', ensureAuth, roleCheck('admin'), deleteOrder); 
 
 module.exports = orderRouter;

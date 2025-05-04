@@ -57,7 +57,7 @@ const orderSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        createdAt: Date.now
+        default: Date.now
     }
 });
 

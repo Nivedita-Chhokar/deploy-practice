@@ -1,5 +1,6 @@
 const express = require('express');
 const productRouter = express.Router();
+const ensureAuth = require('../middleware/authMiddleware');
 const roleCheck = require('../middleware/roleMiddleware');
 
 const {
@@ -14,9 +15,9 @@ const {
 productRouter.get('/', getAllProducts);
 productRouter.get('/:id', getProductById);
 
-//admin routes
-productRouter.post('/', roleCheck('admin'), createProduct);
-productRouter.put('/:id', roleCheck('admin'), updateProduct);
-productRouter.delete('/:id', roleCheck('admin'), deleteProduct);
+//admin routes - Added ensureAuth middleware
+productRouter.post('/', ensureAuth, roleCheck('admin'), createProduct);
+productRouter.put('/:id', ensureAuth, roleCheck('admin'), updateProduct);
+productRouter.delete('/:id', ensureAuth, roleCheck('admin'), deleteProduct);
 
 module.exports = productRouter;

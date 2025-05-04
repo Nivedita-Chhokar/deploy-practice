@@ -7,23 +7,24 @@ const register = async(req,res) => {
     const {name, email, password} = req.body;
     const user = await User.findOne({email});
     if(user){
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: "User with this email already exists"
-        })
+        });
     }
 
     const userModel = new User({name,email,password});
-    userModel.password = await bcrypt.hash(password);
+    // Add salt rounds (10 is common)
+    userModel.password = await bcrypt.hash(password, 10);
     await userModel.save();
 
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         message: "Successfully created a user"
-    })
+    });
 
    } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
         success: false,
         message: "Internal Server Error"
     });
@@ -35,42 +36,44 @@ const login = async(req,res) => {
         const {email, password} = req.body;
         const user = await User.findOne({email});
         if(!user) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "User with these credentials doesnt exist"
             });
         }
         const passCheck = await bcrypt.compare(password, user.password);
         if(!passCheck) {
-            res.status(403).json({
+            return res.status(403).json({
                 success: false,
                 message: "Incorrect credentials"
-            })
+            });
         }
         const jwtToken = jwt.sign(
-            {email: user.email, _id: user._id},
+            {email: user.email, _id: user._id, roles: [user.role]},
             process.env.JWT_SECRET,
             {expiresIn: '24h'}
-        )
+        );
 
-        res.status(200).json({
+        // Send token in response
+        return res.status(200).json({
             success: true,
-            message: "Successfully logged in"
-        })
+            message: "Successfully logged in",
+            token: jwtToken
+        });
 
     } catch(error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Internal server error"
-        })
+        });
     }
 }
 
 const logout = async(req,res) => {
-    res.status(200).json({
+    return res.status(200).json({
         success:true,
         data:{}
-    })
+    });
 }
 
 module.exports = {
