@@ -4,7 +4,7 @@ const cors = require('cors');
 const authRouter = require('./routes/AuthRouter');
 const productRouter = require('./routes/ProductRouter');
 const orderRouter = require('./routes/OrderRouter');
-const ensureAuth = require('./middleware/authMiddleware'); // Add auth middleware
+const ensureAuth = require('./middleware/authMiddleware');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
@@ -13,7 +13,14 @@ connectDB();
 const PORT = process.env.PORT || 8009;
 
 const app = express();
-app.use(cors());
+
+// Enhanced CORS configuration
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
 app.use("/api/products", productRouter);
@@ -22,6 +29,11 @@ app.use("/api/orders", ensureAuth, orderRouter);
 
 app.get("/", (req,res)=>{
     res.status(200).send("Application is running");
+});
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: 'Server is up and running' });
 });
 
 app.use((req, res, next) => {

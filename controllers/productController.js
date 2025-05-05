@@ -6,126 +6,148 @@ const Product = require('../models/product');
 3. create new product (admin)
 4. update product (admin)
 5. delete product (admin)
-6. update product stock (admin)
-- for each specified variant
-- inStock status based on variants
 */
 
-const getAllProducts = async(req,res) => {
+const getAllProducts = async(req, res) => {
     try {
         const filter = {};
+        
+        // Handle category filter
         if(req.query.category) {
             filter.category = req.query.category;
         }
 
-        if(req.query.includeOutOfStock !== true) {
+        // Handle stock filter (string 'true' becomes boolean true)
+        if(req.query.includeOutOfStock !== 'true') {
             filter.inStock = true;
         }
 
+        console.log('Product filter:', filter);
+        
         const products = await Product.find(filter);
-        res.status(200).json({
+        console.log(`Found ${products.length} products`);
+        
+        return res.status(200).json({
             success: true,
             data: products
-        })
+        });
     } catch (error) {
-        res.status(500).json({
+        console.error('Error in getAllProducts:', error);
+        return res.status(500).json({
             success: false,
-            message: error.message
-        })
+            message: error.message || 'Internal server error'
+        });
     }
-}
+};
 
-const getProductById = async(req,res) => {
+const getProductById = async(req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if(!product) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
-                message: "product not found"
-            })
+                message: "Product not found"
+            });
         }
-        res.status(200).json({
+        
+        return res.status(200).json({
             success: true,
             data: product
-        })
+        });
     } catch (error) {
-        res.status(500).json({
+        console.error('Error in getProductById:', error);
+        return res.status(500).json({
             success: false,
-            message: "internal server error"
-        })
+            message: error.message || 'Internal server error'
+        });
     }
-}
+};
 
-const createProduct = async(req,res) => {
+const createProduct = async(req, res) => {
     try {
-        const hasStock = req.body.variants.some(
-            variant => variant.stock > 0
-        )
+        // Set inStock based on stock value
+        const inStock = req.body.stock > 0;
+        
         const newProduct = new Product({
             ...req.body,
-            inStock: hasStock,
-        })
+            inStock
+        });
 
         await newProduct.save();
-        res.status(200).json({
+        
+        return res.status(201).json({
             success: true,
-            message: "successfully created a product"
-        })
+            message: "Product created successfully",
+            data: newProduct
+        });
     } catch (error) {
-        res.status(500).json({
+        console.error('Error in createProduct:', error);
+        return res.status(500).json({
             success: false,
-            message: "Internal server error"
-        })
+            message: error.message || 'Internal server error'
+        });
     }
-}
+};
 
-const updateProduct = async(req,res) => {
+const updateProduct = async(req, res) => {
     try {
         const updateData = req.body;
-        const updateProduct = await Product.findByIdAndUpdate(
+        
+        // Update inStock if stock is provided
+        if (typeof updateData.stock !== 'undefined') {
+            updateData.inStock = updateData.stock > 0;
+        }
+        
+        const updatedProduct = await Product.findByIdAndUpdate(
             req.params.id,
             updateData,
             {new: true}
-        )
+        );
 
-        if(!updateProduct){
-            res.status(404).json({
+        if(!updatedProduct) {
+            return res.status(404).json({
                 success: false,
                 message: "Product not found"
-            })
+            });
         }
-        res.status(200).json({
+        
+        return res.status(200).json({
             success: true,
-            message: "successfully updated the product"
-        })
+            message: "Product updated successfully",
+            data: updatedProduct
+        });
     } catch(error) {
-        res.status(500).json({
+        console.error('Error in updateProduct:', error);
+        return res.status(500).json({
             success: false,
-            message: "Internal server error"
-        })
+            message: error.message || 'Internal server error'
+        });
     }
-}
+};
 
-const deleteProduct = async(req,res) => {
+const deleteProduct = async(req, res) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
+        
         if(!product) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
-                message: "product not found"
-            })
+                message: "Product not found"
+            });
         }
-        res.status(200).json({
+        
+        return res.status(200).json({
             success: true,
-            message: "Deleted product successfully"
-        })
+            message: "Product deleted successfully"
+        });
     } catch(error) {
-        res.status(500).json({
+        console.error('Error in deleteProduct:', error);
+        return res.status(500).json({
             success: false,
-            message: "Internal server error"
-        })
+            message: error.message || 'Internal server error'
+        });
     }
-}
+};
 
 module.exports = {
     getAllProducts,
@@ -133,4 +155,4 @@ module.exports = {
     createProduct,
     updateProduct,
     deleteProduct
-}
+};

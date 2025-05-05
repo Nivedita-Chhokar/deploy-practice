@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Product = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true
@@ -19,16 +19,21 @@ const Product = new mongoose.Schema({
     },
     stock: {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     category: {
         type: String,
-        enum:['shoes', 'shirts']
+        enum: ['shoes', 'shirts'],
+        required: true
+    },
+    inStock: {
+        type: Boolean,
+        default: true
     },
     ratings: {
         average: {
             type: Number,
-
             default: 0,
             min: 0,
             max: 5
@@ -40,5 +45,5 @@ const Product = new mongoose.Schema({
     }
 });
 
-const productModel = mongoose.model('Product', Product);
-module.exports = productModel;
+const Product = mongoose.model('Product', productSchema);
+module.exports = Product;
